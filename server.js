@@ -3,9 +3,16 @@ const session = require('express-session');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const ejs = require('ejs');
+require('dotenv').config();
+const { connectDB } = require('./config/db');
 
-// Import database models
-const { User, Course, Enrollment } = require('./models/database');
+// Import Mongo models
+//const AdminModel = require('./models/Admin');
+const Studentmodel = require('./models/Student');
+const Instructormodel = require('./models/Instructor');
+
+// Import legacy NeDB models (courses/enrollments)
+const { Course, Enrollment } = require('./models/database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,13 +31,24 @@ app.use(session({
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// Auth helpers and constants
+const ADMIN_CREDENTIALS = { id: 'admin', password: 'admin123' };
+
 // Middleware to check authentication
 const requireAuth = (req, res, next) => {
-  if (req.session.userId) {
+  if (req.session.userId || req.session.role === 'admin') {
     next();
   } else {
     res.redirect('/login');
   }
+};
+
+// Role-based access control
+const requireRole = (role) => (req, res, next) => {
+  if (role === 'admin') {
+    return req.session.role === 'admin' ? next() : res.redirect('/login');
+  }
+  return req.session.role === role ? next() : res.redirect('/login');
 };
 
 // Routes
@@ -43,7 +61,7 @@ app.get('/', async (req, res) => {
       });
     });
     
-    const user = req.session.userId ? await getUserById(req.session.userId) : null;
+    const user = await getCurrentUser(req);
     const body = await ejs.renderFile(path.join(__dirname, 'views', 'index.ejs'), { courses, user });
     res.render('layout', { 
       body,
@@ -70,7 +88,7 @@ app.get('/courses', async (req, res) => {
       });
     });
     
-    const user = req.session.userId ? await getUserById(req.session.userId) : null;
+    const user = await getCurrentUser(req);
     const body = await ejs.renderFile(path.join(__dirname, 'views', 'courses.ejs'), { courses, user });
     res.render('layout', { 
       body,
@@ -101,7 +119,7 @@ app.get('/course/:id', async (req, res) => {
       return res.status(404).render('404', { title: 'Course Not Found' });
     }
     
-    const user = req.session.userId ? await getUserById(req.session.userId) : null;
+    const user = await getCurrentUser(req);
     const body = await ejs.renderFile(path.join(__dirname, 'views', 'course-detail.ejs'), { course, user });
     res.render('layout', { 
       body,
@@ -124,24 +142,53 @@ app.get('/login', (req, res) => {
   });
 });
 
-app.post('/login', (req, res) => {
-  const { email, password } = req.body;
-  
-  User.findOne({ email }, async (err, user) => {
-    if (err || !user) {
+app.post('/login', async (req, res) => {
+  const { email, password, role } = req.body;
+
+  if (role === 'admin') {
+    if (email === ADMIN_CREDENTIALS.id && password === ADMIN_CREDENTIALS.password) {
+      req.session.userId = null;
+      req.session.role = 'admin';
+      return res.redirect('/dashboard');
+    }
+    return ejs.renderFile(path.join(__dirname, 'views', 'login.ejs'), { error: 'Invalid credentials' }, (err, body) => {
+      if (err) return res.status(500).send('Error rendering page');
+      res.render('layout', { body, title: 'Login - Learnex', user: null });
+    });
+  }
+
+  try {
+    let account = null;
+    if (role === 'student') {
+      account = await Studentmodel.findOne({ email });
+    } else if (role === 'instructor') {
+      // Instructor schema uses `id` as identifier, map email input to `id` field
+      account = await Instructormodel.findOne({ id: email });
+    } else {
       const body = await ejs.renderFile(path.join(__dirname, 'views', 'login.ejs'), { error: 'Invalid credentials' });
       return res.render('layout', { body, title: 'Login - Learnex', user: null });
     }
-    
-    const isValid = await bcrypt.compare(password, user.password);
+
+    if (!account) {
+      const body = await ejs.renderFile(path.join(__dirname, 'views', 'login.ejs'), { error: 'Invalid credentials' });
+      return res.render('layout', { body, title: 'Login - Learnex', user: null });
+    }
+
+    // Plain text comparison per current schema
+    const isValid = account.password === password;
     if (!isValid) {
       const body = await ejs.renderFile(path.join(__dirname, 'views', 'login.ejs'), { error: 'Invalid credentials' });
       return res.render('layout', { body, title: 'Login - Learnex', user: null });
     }
-    
-    req.session.userId = user._id;
-    res.redirect('/dashboard');
-  });
+
+    req.session.role = role;
+    req.session.userId = account._id.toString();
+    return res.redirect('/dashboard');
+  } catch (err) {
+    console.error(err);
+    const body = await ejs.renderFile(path.join(__dirname, 'views', 'login.ejs'), { error: 'Invalid credentials' });
+    return res.render('layout', { body, title: 'Login - Learnex', user: null });
+  }
 });
 
 app.get('/register', (req, res) => {
@@ -155,68 +202,74 @@ app.get('/register', (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, terms } = req.body;
   
   try {
-    // Check if user already exists
-    const existingUser = await new Promise((resolve, reject) => {
-      User.findOne({ email }, (err, doc) => {
-        if (err) reject(err);
-        else resolve(doc);
+    if (role === 'admin') {
+      const body = await ejs.renderFile(path.join(__dirname, 'views', 'register.ejs'), { error: 'Admin registration is not allowed' });
+      return res.render('layout', { body, title: 'Register - Learnex', user: null });
+    }
+
+    const normalizedRole = (role === 'instructor' || role === 'student') ? role : 'student';
+
+    if (normalizedRole === 'student') {
+      const existing = await Studentmodel.findOne({ email });
+      if (existing) {
+        const body = await ejs.renderFile(path.join(__dirname, 'views', 'register.ejs'), { error: 'User already exists' });
+        return res.render('layout', { body, title: 'Register - Learnex', user: null });
+      }
+      const created = await Studentmodel.create({
+        name,
+        email,
+        password,
+        role: 'student',
+        terms
       });
-    });
-    
-    if (existingUser) {
+      req.session.userId = created._id.toString();
+      req.session.role = 'student';
+      return res.redirect('/dashboard');
+    }
+
+    // Instructor registration using `id` as identifier
+    const existingInst = await Instructormodel.findOne({ id: email });
+    if (existingInst) {
       const body = await ejs.renderFile(path.join(__dirname, 'views', 'register.ejs'), { error: 'User already exists' });
       return res.render('layout', { body, title: 'Register - Learnex', user: null });
     }
-    
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-    
-    // Create user
-    const newUser = {
-      name,
-      email,
-      password: hashedPassword,
-      role: role || 'student',
-      createdAt: new Date()
-    };
-    
-    User.insert(newUser, (err, user) => {
-      if (err) {
-        ejs.renderFile(path.join(__dirname, 'views', 'register.ejs'), { error: 'Registration failed' }, (renderErr, body) => {
-          if (renderErr) {
-            console.error(renderErr);
-            return res.status(500).send('Error rendering page');
-          }
-          res.render('layout', { body, title: 'Register - Learnex', user: null });
-        });
-        return;
-      }
-      
-      req.session.userId = user._id;
-      res.redirect('/dashboard');
-    });
-    
+    const createdInst = await Instructormodel.create({ id: email, password, confirmpassword: password });
+    req.session.userId = createdInst._id.toString();
+    req.session.role = 'instructor';
+    return res.redirect('/dashboard');
   } catch (error) {
     console.error(error);
     const body = await ejs.renderFile(path.join(__dirname, 'views', 'register.ejs'), { error: 'Registration failed' });
-    res.render('layout', { body, title: 'Register - Learnex', user: null });
+    return res.render('layout', { body, title: 'Register - Learnex', user: null });
   }
 });
 
 app.get('/dashboard', requireAuth, async (req, res) => {
   try {
-    const user = await getUserById(req.session.userId);
+    if (req.session.role === 'admin') return res.redirect('/dashboard/admin');
+    if (req.session.role === 'instructor') return res.redirect('/dashboard/instructor');
+    if (req.session.role === 'student') return res.redirect('/dashboard/student');
+    return res.redirect('/login');
+  } catch (error) {
+    console.error(error);
+    res.redirect('/login');
+  }
+});
+
+// Student Dashboard
+app.get('/dashboard/student', requireRole('student'), async (req, res) => {
+  try {
+    const user = await getCurrentUser(req);
     const enrollments = await new Promise((resolve, reject) => {
       Enrollment.find({ userId: req.session.userId }, (err, docs) => {
         if (err) reject(err);
         else resolve(docs);
       });
     });
-    
-    // Get enrolled courses
+
     const courseIds = enrollments.map(e => e.courseId);
     const enrolledCourses = await new Promise((resolve, reject) => {
       Course.find({ _id: { $in: courseIds } }, (err, docs) => {
@@ -224,20 +277,69 @@ app.get('/dashboard', requireAuth, async (req, res) => {
         else resolve(docs);
       });
     });
-    
+
     const body = await ejs.renderFile(path.join(__dirname, 'views', 'dashboard.ejs'), { user, enrolledCourses });
-    res.render('layout', { 
-      body,
-      title: 'Dashboard - Learnex',
-      user
-    });
+    res.render('layout', { body, title: 'Student Dashboard - Learnex', user });
   } catch (error) {
     console.error(error);
     res.redirect('/login');
   }
 });
 
-app.post('/enroll/:courseId', requireAuth, (req, res) => {
+// Instructor Dashboard
+app.get('/dashboard/instructor', requireRole('instructor'), async (req, res) => {
+  try {
+    const user = await getCurrentUser(req);
+    const courses = await new Promise((resolve, reject) => {
+      Course.find({ instructor: user.name }, (err, docs) => {
+        if (err) reject(err);
+        else resolve(docs);
+      });
+    });
+
+    const courseIds = courses.map(c => c._id);
+    const enrollments = await new Promise((resolve, reject) => {
+      Enrollment.find({ courseId: { $in: courseIds } }, (err, docs) => {
+        if (err) reject(err);
+        else resolve(docs);
+      });
+    });
+
+    const enrollmentCounts = {};
+    courseIds.forEach(id => { enrollmentCounts[id] = 0; });
+    enrollments.forEach(e => { enrollmentCounts[e.courseId] = (enrollmentCounts[e.courseId] || 0) + 1; });
+
+    const body = await ejs.renderFile(path.join(__dirname, 'views', 'dashboard-instructor.ejs'), { user, courses, enrollmentCounts });
+    res.render('layout', { body, title: 'Instructor Dashboard - Learnex', user });
+  } catch (error) {
+    console.error(error);
+    res.redirect('/login');
+  }
+});
+
+// Admin Dashboard
+app.get('/dashboard/admin', requireRole('admin'), async (req, res) => {
+  try {
+    const user = { name: 'Admin', role: 'admin' };
+
+    const [studentCount, instructorCount, courseCount, enrollmentCount] = await Promise.all([
+      Studentmodel.countDocuments({}),
+      Instructormodel.countDocuments({}),
+      new Promise((resolve) => Course.count({}, (err, n) => resolve(n || 0))),
+      new Promise((resolve) => Enrollment.count({}, (err, n) => resolve(n || 0)))
+    ]);
+
+    const totalUsers = (studentCount || 0) + (instructorCount || 0);
+
+    const body = await ejs.renderFile(path.join(__dirname, 'views', 'dashboard-admin.ejs'), { user, stats: { totalUsers, studentCount, instructorCount, courseCount, enrollmentCount } });
+    res.render('layout', { body, title: 'Admin Dashboard - Learnex', user });
+  } catch (error) {
+    console.error(error);
+    res.redirect('/login');
+  }
+});
+
+app.post('/enroll/:courseId', requireRole('student'), (req, res) => {
   const enrollment = {
     userId: req.session.userId,
     courseId: req.params.courseId,
@@ -258,14 +360,26 @@ app.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
-// Helper function
-async function getUserById(id) {
-  return new Promise((resolve, reject) => {
-    User.findOne({ _id: id }, (err, doc) => {
-      if (err) reject(err);
-      else resolve(doc);
-    });
-  });
+// Current user helper (handles admin + Mongo models)
+async function getCurrentUser(req) {
+  try {
+    if (req.session && req.session.role === 'admin') {
+      return { _id: 'admin', name: 'Admin', role: 'admin', email: 'admin@learnex.local' };
+    }
+    if (!req.session || !req.session.userId || !req.session.role) return null;
+
+    if (req.session.role === 'student') {
+      const doc = await Studentmodel.findById(req.session.userId);
+      return doc ? { ...doc.toObject(), role: 'student' } : null;
+    }
+    if (req.session.role === 'instructor') {
+      const doc = await Instructormodel.findById(req.session.userId);
+      return doc ? { ...doc.toObject(), role: 'instructor' } : null;
+    }
+    return null;
+  } catch (e) {
+    return null;
+  }
 }
 
 // Initialize sample data
@@ -356,8 +470,16 @@ async function initializeSampleData() {
   });
 }
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  initializeSampleData();
-});
+// Start server after DB connection
+(async () => {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+      initializeSampleData();
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
+})();

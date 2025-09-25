@@ -1,0 +1,59 @@
+<div class="dashboard">
+  <div class="container">
+    <div class="dashboard-header">
+      <h1>Welcome, <%= user.name %> (Instructor)</h1>
+      <p>Manage your courses and track enrollments</p>
+    </div>
+
+    <div class="dashboard-content">
+      <div class="dashboard-sidebar">
+        <div class="user-profile">
+          <div class="user-avatar">
+            <i class="fas fa-user-tie"></i>
+          </div>
+          <div class="user-info">
+            <h3><%= user.name %></h3>
+            <p><%= user.role %></p>
+          </div>
+        </div>
+
+        <nav class="dashboard-nav">
+          <ul>
+            <li><a class="nav-link active"><i class="fas fa-gauge"></i> Overview</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <div class="dashboard-main">
+        <div class="panel">
+          <h2>Your Courses</h2>
+          <% if (courses.length > 0) { %>
+            <div class="courses-grid">
+              <% courses.forEach(course => { %>
+                <div class="course-card">
+                  <div class="course-image">
+                    <img src="<%= course.image %>" alt="<%= course.title %>">
+                    <div class="course-level"><%= course.level %></div>
+                  </div>
+                  <div class="course-content">
+                    <div class="course-category"><%= course.category %></div>
+                    <h3 class="course-title"><%= course.title %></h3>
+                    <div class="course-meta">
+                      <span><i class="fas fa-users"></i> <%= enrollmentCounts[course._id] || 0 %> students</span>
+                      <span><i class="fas fa-book"></i> <%= course.lessons %> lessons</span>
+                    </div>
+                    <div class="course-footer">
+                      <a href="/course/<%= course._id %>" class="btn btn-outline">View</a>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          <% } else { %>
+            <p>You have no courses yet.</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

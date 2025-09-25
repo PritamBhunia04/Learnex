@@ -1,0 +1,73 @@
+<div class="dashboard">
+  <div class="container">
+    <div class="dashboard-header">
+      <h1>Admin Dashboard</h1>
+      <p>System overview and statistics</p>
+    </div>
+
+    <div class="dashboard-content">
+      <div class="dashboard-sidebar">
+        <div class="user-profile">
+          <div class="user-avatar">
+            <i class="fas fa-user-shield"></i>
+          </div>
+          <div class="user-info">
+            <h3><%= user.name %></h3>
+            <p><%= user.role %></p>
+          </div>
+        </div>
+
+        <nav class="dashboard-nav">
+          <ul>
+            <li><a class="nav-link active"><i class="fas fa-gauge"></i> Overview</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <div class="dashboard-main">
+        <div class="dashboard-stats">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-users"></i></div>
+            <div class="stat-info">
+              <div class="stat-number"><%= stats.totalUsers %></div>
+              <div class="stat-label">Total Users</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+            <div class="stat-info">
+              <div class="stat-number"><%= stats.studentCount %></div>
+              <div class="stat-label">Students</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+            <div class="stat-info">
+              <div class="stat-number"><%= stats.instructorCount %></div>
+              <div class="stat-label">Instructors</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-book"></i></div>
+            <div class="stat-info">
+              <div class="stat-number"><%= stats.courseCount %></div>
+              <div class="stat-label">Courses</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
+            <div class="stat-info">
+              <div class="stat-number"><%= stats.enrollmentCount %></div>
+              <div class="stat-label">Enrollments</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Management</h2>
+          <p>Extend here with user/course moderation tools.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
