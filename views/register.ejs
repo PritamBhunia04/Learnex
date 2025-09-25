@@ -1,0 +1,54 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h2>Join Learnex</h2>
+      <p>Create your account to start your learning journey</p>
+    </div>
+
+    <% if (error) { %>
+      <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        <%= error %>
+      </div>
+    <% } %>
+
+    <form class="auth-form" action="/register" method="POST">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" required>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" required>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+
+      <div class="form-group">
+        <label for="role">I am a:</label>
+        <select id="role" name="role">
+          <option value="student">Student</option>
+          <option value="instructor">Instructor</option>
+        </select>
+      </div>
+
+      <div class="form-options">
+        <label class="checkbox-label">
+          <input type="checkbox" name="terms" required>
+          <span class="checkmark"></span>
+          I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+    </form>
+
+    <div class="auth-footer">
+      <p>Already have an account? <a href="/login">Sign in here</a></p>
+    </div>
+  </div>
+</div>

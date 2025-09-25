@@ -1,0 +1,93 @@
+<div class="dashboard">
+  <div class="container">
+    <div class="dashboard-header">
+      <h1>Welcome back, <%= user.name %>!</h1>
+      <p>Continue your learning journey</p>
+    </div>
+
+    <div class="dashboard-content">
+      <div class="dashboard-sidebar">
+        <div class="user-profile">
+          <div class="user-avatar">
+            <i class="fas fa-user-circle"></i>
+          </div>
+          <div class="user-info">
+            <h3><%= user.name %></h3>
+            <p><%= user.role %></p>
+          </div>
+        </div>
+
+        <nav class="dashboard-nav">
+          <ul>
+            <li><a href="#" class="nav-link active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <li><a href="#" class="nav-link"><i class="fas fa-book"></i> My Courses</a></li>
+            <li><a href="#" class="nav-link"><i class="fas fa-certificate"></i> Certificates</a></li>
+            <li><a href="#" class="nav-link"><i class="fas fa-user"></i> Profile</a></li>
+            <li><a href="#" class="nav-link"><i class="fas fa-cog"></i> Settings</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <div class="dashboard-main">
+        <div class="dashboard-stats">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-book"></i></div>
+            <div class="stat-info">
+              <div class="stat-number"><%= enrolledCourses.length %></div>
+              <div class="stat-label">Enrolled Courses</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+            <div class="stat-info">
+              <div class="stat-number">0</div>
+              <div class="stat-label">Certificates</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-clock"></i></div>
+            <div class="stat-info">
+              <div class="stat-number">0h</div>
+              <div class="stat-label">Learning Hours</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="my-courses-section">
+          <h2>My Courses</h2>
+          <% if (enrolledCourses.length > 0) { %>
+            <div class="enrolled-courses">
+              <% enrolledCourses.forEach(course => { %>
+                <div class="enrolled-course-card">
+                  <div class="course-thumbnail">
+                    <img src="<%= course.image %>" alt="<%= course.title %>">
+                  </div>
+                  <div class="course-details">
+                    <h3><%= course.title %></h3>
+                    <p><%= course.instructor %></p>
+                    <div class="progress-bar">
+                      <div class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-text">0% Complete</div>
+                  </div>
+                  <div class="course-actions">
+                    <a href="/course/<%= course._id %>" class="btn btn-primary">Continue</a>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          <% } else { %>
+            <div class="no-courses">
+              <div class="no-courses-icon">
+                <i class="fas fa-book"></i>
+              </div>
+              <h3>No courses yet</h3>
+              <p>Start your learning journey by enrolling in a course</p>
+              <a href="/courses" class="btn btn-primary">Browse Courses</a>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

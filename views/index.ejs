@@ -1,0 +1,123 @@
+<!-- Hero Section -->
+<section class="hero">
+  <div class="hero-content">
+    <h1 class="hero-title">Learn Without Limits</h1>
+    <p class="hero-subtitle">Discover thousands of courses from world-class instructors and advance your career with Learnex</p>
+    <div class="hero-buttons">
+      <a href="/courses" class="btn btn-primary">Explore Courses</a>
+      <a href="/register" class="btn btn-secondary">Start Learning</a>
+    </div>
+  </div>
+  <div class="hero-image">
+    <img src="https://images.pexels.com/photos/3184287/pexels-photo-3184287.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Online Learning">
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="features">
+  <div class="container">
+    <h2 class="section-title">Why Choose Learnex?</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-play-circle"></i>
+        </div>
+        <h3>High-Quality Content</h3>
+        <p>Learn from industry experts with carefully crafted, up-to-date course materials</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-clock"></i>
+        </div>
+        <h3>Learn at Your Pace</h3>
+        <p>Study when and where you want with lifetime access to course materials</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-certificate"></i>
+        </div>
+        <h3>Get Certified</h3>
+        <p>Earn certificates upon completion to showcase your new skills</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <h3>Community Support</h3>
+        <p>Connect with fellow learners and get help from instructors</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Featured Courses Section -->
+<section class="featured-courses">
+  <div class="container">
+    <h2 class="section-title">Featured Courses</h2>
+    <div class="courses-grid">
+      <% courses.forEach(course => { %>
+        <div class="course-card">
+          <div class="course-image">
+            <img src="<%= course.image %>" alt="<%= course.title %>">
+            <div class="course-level"><%= course.level %></div>
+          </div>
+          <div class="course-content">
+            <div class="course-category"><%= course.category %></div>
+            <h3 class="course-title"><%= course.title %></h3>
+            <p class="course-description"><%= course.description %></p>
+            <div class="course-instructor">
+              <i class="fas fa-user"></i>
+              <%= course.instructor %>
+            </div>
+            <div class="course-meta">
+              <span><i class="fas fa-book"></i> <%= course.lessons %> lessons</span>
+              <span><i class="fas fa-users"></i> <%= course.students %> students</span>
+            </div>
+            <div class="course-footer">
+              <div class="course-price">$<%= course.price %></div>
+              <a href="/course/<%= course._id %>" class="btn btn-outline">View Course</a>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+    <div class="text-center">
+      <a href="/courses" class="btn btn-primary">View All Courses</a>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number">50K+</div>
+        <div class="stat-label">Students</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">500+</div>
+        <div class="stat-label">Courses</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">100+</div>
+        <div class="stat-label">Instructors</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">95%</div>
+        <div class="stat-label">Success Rate</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta">
+  <div class="container">
+    <div class="cta-content">
+      <h2>Ready to Start Learning?</h2>
+      <p>Join thousands of students already learning on Learnex</p>
+      <a href="/register" class="btn btn-primary btn-large">Get Started Today</a>
+    </div>
+  </div>
+</section>

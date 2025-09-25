@@ -1,0 +1,144 @@
+<div class="course-hero">
+  <div class="container">
+    <div class="course-hero-content">
+      <div class="course-info">
+        <div class="course-breadcrumb">
+          <a href="/courses">Courses</a> > <span><%= course.category %></span>
+        </div>
+        <h1 class="course-title"><%= course.title %></h1>
+        <p class="course-description"><%= course.description %></p>
+        
+        <div class="course-instructor-info">
+          <div class="instructor-avatar">
+            <i class="fas fa-user-circle"></i>
+          </div>
+          <div class="instructor-details">
+            <div class="instructor-name"><%= course.instructor %></div>
+            <div class="instructor-title">Course Instructor</div>
+          </div>
+        </div>
+
+        <div class="course-stats">
+          <div class="stat">
+            <i class="fas fa-book"></i>
+            <span><%= course.lessons %> Lessons</span>
+          </div>
+          <div class="stat">
+            <i class="fas fa-clock"></i>
+            <span><%= course.duration %></span>
+          </div>
+          <div class="stat">
+            <i class="fas fa-signal"></i>
+            <span><%= course.level %></span>
+          </div>
+          <div class="stat">
+            <i class="fas fa-users"></i>
+            <span><%= course.students %> Students</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="course-purchase-card">
+        <div class="course-image">
+          <img src="<%= course.image %>" alt="<%= course.title %>">
+        </div>
+        <div class="purchase-content">
+          <div class="course-price">
+            <span class="price">$<%= course.price %></span>
+          </div>
+          <% if (user) { %>
+            <button class="btn btn-primary btn-large enroll-btn" data-course-id="<%= course._id %>">
+              Enroll Now
+            </button>
+          <% } else { %>
+            <a href="/login" class="btn btn-primary btn-large">Login to Enroll</a>
+          <% } %>
+          <div class="purchase-features">
+            <div class="feature">
+              <i class="fas fa-infinity"></i>
+              <span>Lifetime access</span>
+            </div>
+            <div class="feature">
+              <i class="fas fa-mobile-alt"></i>
+              <span>Mobile friendly</span>
+            </div>
+            <div class="feature">
+              <i class="fas fa-certificate"></i>
+              <span>Certificate of completion</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="course-details">
+  <div class="container">
+    <div class="course-tabs">
+      <div class="tab-buttons">
+        <button class="tab-button active" data-tab="overview">Overview</button>
+        <button class="tab-button" data-tab="curriculum">Curriculum</button>
+        <button class="tab-button" data-tab="instructor">Instructor</button>
+        <button class="tab-button" data-tab="reviews">Reviews</button>
+      </div>
+
+      <div class="tab-content">
+        <div class="tab-panel active" id="overview">
+          <h3>Course Overview</h3>
+          <p><%= course.description %></p>
+          <h4>What you'll learn:</h4>
+          <ul class="learning-objectives">
+            <li>Master the fundamentals of the subject</li>
+            <li>Apply concepts through hands-on projects</li>
+            <li>Build a comprehensive portfolio</li>
+            <li>Gain industry-relevant skills</li>
+          </ul>
+        </div>
+
+        <div class="tab-panel" id="curriculum">
+          <h3>Course Curriculum</h3>
+          <div class="curriculum-section">
+            <h4>Section 1: Getting Started</h4>
+            <ul class="lesson-list">
+              <li class="lesson-item">
+                <i class="fas fa-play-circle"></i>
+                <span>Introduction to the course</span>
+                <span class="lesson-duration">5 min</span>
+              </li>
+              <li class="lesson-item">
+                <i class="fas fa-play-circle"></i>
+                <span>Setting up your environment</span>
+                <span class="lesson-duration">15 min</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="instructor">
+          <h3>About the Instructor</h3>
+          <div class="instructor-profile">
+            <div class="instructor-avatar-large">
+              <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="instructor-info">
+              <h4><%= course.instructor %></h4>
+              <p>Expert instructor with years of experience in the field.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="reviews">
+          <h3>Student Reviews</h3>
+          <div class="reviews-summary">
+            <div class="rating-overview">
+              <div class="average-rating">4.8</div>
+              <div class="stars">★★★★★</div>
+              <div class="rating-count">(245 reviews)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
